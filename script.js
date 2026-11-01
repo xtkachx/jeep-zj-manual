@@ -106,11 +106,28 @@ function normalizedPath() {
     return location.pathname.slice(1 /*leading slash*/) + (hasTrailingSlash ? '' : '/');
 }
 
+/* Manual root = folder containing script.js (works on charm.li paths, GitHub Pages subpaths and file://) */
+const CHARM_ROOT_PATH = (function () {
+    try {
+	if (document.currentScript && document.currentScript.src) {
+	    return new URL('.', document.currentScript.src).pathname;
+	}
+    } catch (e) {}
+    return null;
+})();
+
+function pathBelowRoot() {
+    let p = location.pathname.replace(/index\.html$/, '');
+    if (CHARM_ROOT_PATH && p.indexOf(CHARM_ROOT_PATH) === 0) {
+	p = p.slice(CHARM_ROOT_PATH.length);
+    }
+    return p.replace(/^\/+|\/+$/g, '');
+}
+
 function isFoldablePage() {
-    const numCarPathParts = 3;
     const maxUnfoldedLis = 20;
 
-    return normalizedPath().slice(0, -1).split('/').length > numCarPathParts
+    return pathBelowRoot().length > 0
 	&& document.getElementsByTagName('li').length > maxUnfoldedLis;
 }
 
